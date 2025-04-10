@@ -13,6 +13,7 @@
   "packageManager": "pnpm@10.8.0",
   "dependencies": {
     "express": "^5.1.0",
+    "pg": "^8.14.1",
     "sequelize": "^6.37.7"
   },
   "devDependencies": {
