@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const dbSettings = {
   development: {
       username: process.env.PGUSER,
