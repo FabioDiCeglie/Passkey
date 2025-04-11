@@ -1,4 +1,5 @@
-import React from 'react';
+import { createPublicKeyPairWithChallenge } from '../../lib/helpers';
+import { getChallenge } from '../../lib/api';
 
 type FormComponentProps = {
   title: string;
@@ -15,6 +16,11 @@ const FormComponent: React.FC<FormComponentProps> = ({
   linkHref,
   linkPrompt,
 }) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const challenge = await getChallenge(event);
+    const newCredential = await createPublicKeyPairWithChallenge(challenge);
+  }
   return (
     <div className='flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8'>
       <div className='sm:mx-auto sm:w-full sm:max-w-sm'>
@@ -24,7 +30,7 @@ const FormComponent: React.FC<FormComponentProps> = ({
       </div>
 
       <div className='mt-10 sm:mx-auto sm:w-full sm:max-w-sm'>
-        <form className='space-y-6'>
+        <form className='space-y-6' onSubmit={handleSubmit}>
           <div>
             <label
               htmlFor='username'
