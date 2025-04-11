@@ -1,6 +1,7 @@
 const express = require("express");
 const multer = require('multer');
 const db = require('./db/helpers/init');
+const cookieParser = require('cookie-parser');
 const passport = require('passport')
 const session = require('express-session');
 const SequelizeStore = require('connect-session-sequelize')(session.Store);
@@ -42,3 +43,5 @@ app.use('/', require('./routes'));
 app.listen(port, host, () => {
   console.log(`Example app listening on http://${host}:${port}`)
 });
+
+module.exports = { store };
