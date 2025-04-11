@@ -1,16 +1,15 @@
 const passport = require('passport')
 const WebAuthnStrategy = require('passport-fido2-webauthn')
+const db = require('../db/helpers/init')
+const models = require('../db/models')
 
-const db = require('../../db/helpers/init')
-const models = require('../models')
-
-function initPassport(store) {
+const initPassport = (store) => {
     passport.use(useWebauthnStrategy(store))
     passport.serializeUser(serializeUserFn)
     passport.deserializeUser(deserializeUserFn)
 }
 
-function useWebauthnStrategy(store) {
+const useWebauthnStrategy = (store) => {
     return new WebAuthnStrategy(
         { store: store },
         verify,
@@ -19,20 +18,20 @@ function useWebauthnStrategy(store) {
 }
 
 // Serialize user information into session
-function serializeUserFn(user, done) {
+const serializeUserFn = (user, done) => {
     process.nextTick(() => {
         done(null, { id: user.id, username: user.username }) // Store essential user info
     })
 }
 
 // Deserialize user information from session
-function deserializeUserFn(user, done) {
+const deserializeUserFn = (user, done) => {
     process.nextTick(() => {
         return done(null, user) // Retrieve user info from session
     })
 }
 
-async function verify(id, userHandle, done) {
+const verify = async (id, userHandle, done) => {
     const transaction = await db.transaction()
     try {
         const currentCredentials = await models.PublicKeyCredentials.findOne(
@@ -65,7 +64,7 @@ async function verify(id, userHandle, done) {
     }
 }
 
-async function register(user, id, publicKey, done) {
+const register = async (user, id, publicKey, done) => {
     const transaction = await db.transaction()
     try {
         const newUser = await models.User.create(
