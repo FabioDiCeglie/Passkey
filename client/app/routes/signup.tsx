@@ -2,8 +2,8 @@ import type { Route } from './+types/home';
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: 'Passkey project' },
-    { name: 'description', content: 'Welcome to Passkey project' },
+    { title: 'Passkey project - Sign up' },
+    { name: 'description', content: 'Sign up for Passkey project' },
   ];
 }
 
