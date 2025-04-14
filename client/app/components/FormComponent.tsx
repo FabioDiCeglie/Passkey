@@ -7,7 +7,7 @@ type FormComponentProps = {
   linkText: string;
   linkHref: string;
   linkPrompt: string;
-}
+};
 
 const FormComponent: React.FC<FormComponentProps> = ({
   title,
@@ -20,10 +20,13 @@ const FormComponent: React.FC<FormComponentProps> = ({
     event.preventDefault();
     const challenge = await getChallenge(event);
     const newCredentials = await createPublicKeyPairWithChallenge(challenge);
-    if(newCredentials) {
+    if (newCredentials) {
       const login = await loginWithUserCredentials(newCredentials);
+      if (login.ok) {
+        window.location.href = '/';
+      }
     }
-  }
+  };
   return (
     <div className='flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8'>
       <div className='sm:mx-auto sm:w-full sm:max-w-sm'>
@@ -65,7 +68,10 @@ const FormComponent: React.FC<FormComponentProps> = ({
         <div className='mt-6 text-center'>
           <p className='text-sm text-gray-300'>
             {linkPrompt}{' '}
-            <a href={linkHref} className='font-semibold text-teal-500 hover:text-teal-400'>
+            <a
+              href={linkHref}
+              className='font-semibold text-teal-500 hover:text-teal-400'
+            >
               {linkText}
             </a>
           </p>
@@ -75,4 +81,4 @@ const FormComponent: React.FC<FormComponentProps> = ({
   );
 };
 
-export default FormComponent; 
+export default FormComponent;

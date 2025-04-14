@@ -2,9 +2,24 @@ const base64url = require('base64url');
 const uuid = require('uuid').v4;
 const passport = require('passport');
 
-const register = (req, res) => {
-  res.status(204).send();
-};
+const passportCheck = () => {
+  return passport.authenticate('webauthn', {
+      failureMessage: true,
+      failWithError: true,
+  })
+}
+
+const admitUser = (req, res) => {
+  res.json({ ok: true })
+}
+
+const denyUser = (err, req, res, next) => {
+  const cxx = Math.floor(err.status / 100)
+
+  if (cxx != 4) return next(err)
+
+  res.json({ ok: false })
+}
 
 const createChallenge = (req, res, store) => {
   const user = {
@@ -16,7 +31,7 @@ const createChallenge = (req, res, store) => {
     if (err) return next(err);
 
     user.id = base64url.encode(user.id);
-    
+
     res.json({
       user: user,
       challenge: base64url.encode(challenge),
@@ -25,6 +40,8 @@ const createChallenge = (req, res, store) => {
 };
 
 module.exports = {
-  register,
+  passportCheck,
+  admitUser,
+  denyUser,
   createChallenge,
 };
