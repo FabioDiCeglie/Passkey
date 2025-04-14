@@ -25,3 +25,11 @@ export const loginWithUserCredentials = async (userCredentials: Credential) => {
     "Error during login with credentials"
   );
 };
+
+export const logout = async () => {
+  return fetchWithErrorHandling(
+    `${import.meta.env.VITE_API_URL}/logout`,
+    { method: 'POST' },
+    "Error during logout"
+  );
+};

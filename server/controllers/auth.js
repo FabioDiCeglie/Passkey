@@ -39,9 +39,17 @@ const createChallenge = (req, res, store) => {
   });
 };
 
+const logout = (req, res) => {
+  req.logout((err) => {
+    if (err) return next(err);
+    res.json({ ok: true });
+  });
+}
+
 module.exports = {
   passportCheck,
   admitUser,
   denyUser,
   createChallenge,
+  logout,
 };

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Route } from './+types/home';
+import { logout } from '../../lib/api';
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -9,9 +10,37 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState({
+    value: false,
+    error: '',
+    isLoading: false,
+  });
+
+  const handleLogout = () => {
+    setIsLoggedIn({
+      value: false,
+      error: '',
+      isLoading: true,
+    });
+    logout().then((response) => {
+      if ((response as { ok: boolean }).ok) {
+        setIsLoggedIn({
+          value: false,
+          error: '',
+          isLoading: false,
+        });
+      }
+    }).catch((error) => {
+      setIsLoggedIn({
+        value: false,
+        error: 'Logout failed',
+        isLoading: false,
+      });
+    });
+  };
+
   return (
-    isLoggedIn ? (
+    isLoggedIn.value ? (
     <div className='flex min-h-screen items-center justify-center'>
       <div className='bg-white rounded-lg shadow-xl p-10 text-center'>
         <h1 className='text-4xl font-extrabold text-gray-800 mb-4 flex items-center justify-center'>
@@ -25,7 +54,7 @@ export default function Home() {
         <div className='mt-6'>
           <button 
             className='bg-red-500 text-white px-6 py-3 rounded-full shadow-md hover:bg-red-400 transition duration-300 ease-in-out cursor-pointer'
-            onClick={() => setIsLoggedIn(false)}
+            onClick={handleLogout}
           >
             <span className='mr-2'>🔓</span> Logout
           </button>
@@ -42,7 +71,13 @@ export default function Home() {
         <div className='mt-6 space-x-4'>
           <button 
             className='bg-teal-500 text-white px-6 py-3 rounded-full shadow-md hover:bg-teal-400 transition duration-300 ease-in-out cursor-pointer'
-            onClick={() => setIsLoggedIn(true)}
+            onClick={() => {
+              setIsLoggedIn({
+                value: true,
+                error: '',
+                isLoading: false,
+              });
+            }}
           >
             <span className='mr-2'>🔑</span> Log in
           </button>

@@ -22,7 +22,7 @@ const FormComponent: React.FC<FormComponentProps> = ({
     const newCredentials = await createPublicKeyPairWithChallenge(challenge);
     if (newCredentials) {
       const login = await loginWithUserCredentials(newCredentials);
-      if (login.ok) {
+      if (login) {
         window.location.href = '/';
       }
     }

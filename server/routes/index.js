@@ -1,23 +1,36 @@
 const express = require('express');
 const router = express.Router();
 const { initPassport } = require('../services/passport');
-const sessionChallengeStore = require('passport-fido2-webauthn').SessionChallengeStore;
+const passport = require('passport');
+const sessionChallengeStore =
+  require('passport-fido2-webauthn').SessionChallengeStore;
 
 const store = new sessionChallengeStore();
-
 initPassport(store); // Initialize Passport with the session challenge store
 
-const { createChallenge, passportCheck, admitUser, denyUser } = require('../controllers/auth');
+const {
+  createChallenge,
+  admitUser,
+  denyUser,
+  logout,
+} = require('../controllers/auth');
 
 router.get('/healthcheck', (req, res) => {
   res.status(204).send();
 });
 
-router.post('/login/public-key',
-  passportCheck(),
+router.post('/register/public-key/challenge', (req, res) =>
+  createChallenge(req, res, store)
+);
+router.post(
+  '/login/public-key',
+  passport.authenticate('webauthn', {
+    failureMessage: true,
+    failWithError: true,
+  }),
   admitUser,
   denyUser
 );
-router.post('/register/public-key/challenge', (req, res) => createChallenge(req, res, store));
+router.post('/logout', logout);
 
 module.exports = router;
