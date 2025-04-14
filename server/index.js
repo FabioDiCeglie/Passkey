@@ -1,31 +1,29 @@
 const express = require("express");
+const cors = require('cors');
 const multer = require('multer');
 const db = require('./db/helpers/init');
 const cookieParser = require('cookie-parser');
 const passport = require('passport')
 const session = require('express-session');
 const SequelizeStore = require('connect-session-sequelize')(session.Store);
-const { initPassport } = require('./services/passport');
-const sessionChallengeStore = require('passport-fido2-webauthn').SessionChallengeStore;
 
 const app = express();
 const port = process.env.PORT || 3000;
-const host = '0.0.0.0'
-
-const store = new sessionChallengeStore();
-
-initPassport(store); // Initialize Passport with the session challenge store
 
 const sessionStore = new SequelizeStore({
   db: db,
 });
 
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true,
+}));
 app.use(express.json());
 app.use(multer().none()); // Middleware to handle multipart/form-data
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true })); // Middleware to parse URL-encoded bodies
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || 'secret',
   resave: false,
   saveUninitialized: true,
   store: sessionStore,
@@ -40,8 +38,6 @@ app.use(passport.authenticate('session')); // Middleware to authenticate session
 // Routes
 app.use('/', require('./routes'));
 
-app.listen(port, host, () => {
-  console.log(`Example app listening on http://${host}:${port}`)
+app.listen(port, () => {
+  console.log(`Example app listening on http://localhost:${port}`)
 });
-
-module.exports = { store };
