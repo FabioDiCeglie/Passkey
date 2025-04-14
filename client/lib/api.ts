@@ -1,13 +1,10 @@
-import { buildLoginOptionsWithUserCredentials, fetchWithErrorHandling } from "./helpers";
+import { buildLoginOptionsWithUserCredentials, fetchWithErrorHandling, type ChallengeResponse } from "./helpers";
 
-export const getChallenge = async (event: React.FormEvent<HTMLFormElement>) => {
+export const getChallenge = async (event: React.FormEvent<HTMLFormElement>): Promise<ChallengeResponse> => {
   return fetchWithErrorHandling(
-    `${process.env.API_URL}/register/public-key/challenge`,
+    `${import.meta.env.VITE_API_URL}/register/public-key/challenge`,
     {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: new FormData(event.target as HTMLFormElement),
     },
     "Error getting challenge"
@@ -16,9 +13,8 @@ export const getChallenge = async (event: React.FormEvent<HTMLFormElement>) => {
 
 export const loginWithUserCredentials = async (userCredentials: Credential) => {
   const options = await buildLoginOptionsWithUserCredentials(userCredentials);
-  
   return fetchWithErrorHandling(
-    `${process.env.API_URL}/login/public-key`,
+    `${import.meta.env.VITE_API_URL}/login/public-key`,
     {
       method: 'POST',
       headers: {
