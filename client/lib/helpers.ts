@@ -1,4 +1,4 @@
-import base64url from 'base64url';
+import { decode, encode } from './base64url';
 
 export const fetchWithErrorHandling = async <T>(
     url: string,
@@ -11,7 +11,6 @@ export const fetchWithErrorHandling = async <T>(
         if (!response.ok) {
             throw new Error(`${errorMessage}: Server responded with status ${response.status}`);
         }
-
         return await response.json() as T;
     } catch (error) {
         console.error(`${errorMessage}:`, error);
@@ -19,7 +18,7 @@ export const fetchWithErrorHandling = async <T>(
     }
 };
 
-type ChallengeResponse = {
+export type ChallengeResponse = {
     user: {
         id: string;
         name: string;
@@ -35,11 +34,11 @@ export const createPublicKeyPairWithChallenge = async (challengeResponse: Challe
                 name: 'Passkey project',
             },
             user: {
-                id: Uint8Array.from(base64url.toBuffer(user.id)),
+                id: decode(user.id),
                 name: user.name,
                 displayName: user.name,
             },
-            challenge: Uint8Array.from(base64url.toBuffer(challenge)),
+            challenge: decode(challenge),
             pubKeyCredParams: [
                 {
                     type: 'public-key',
@@ -82,9 +81,10 @@ export const buildLoginOptionsWithUserCredentials = async (
     const attestationResponse = response as AuthenticatorAttestationResponseWithTransports;
 
     const body = {
+        id: userCredentials.id,
         response: {
-            clientDataJSON: base64url.encode(response.clientDataJSON as unknown as string),
-            attestationObject: base64url.encode(attestationResponse.attestationObject as unknown as string),
+            clientDataJSON: encode(response.clientDataJSON as unknown as string),
+            attestationObject: encode(attestationResponse.attestationObject as unknown as string),
             transports: attestationResponse.getTransports ? attestationResponse.getTransports() : [],
         }
     };
