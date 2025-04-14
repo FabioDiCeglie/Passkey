@@ -76,15 +76,14 @@ export const buildLoginOptionsWithUserCredentials = async (
         transports: string[];
     }
 }> => {
-    const { response } = userCredentials;
     // Cast to the extended interface that includes optional getTransports
-    const attestationResponse = response as AuthenticatorAttestationResponseWithTransports;
+    const attestationResponse = userCredentials.response as AuthenticatorAttestationResponseWithTransports;
 
     const body = {
         id: userCredentials.id,
         response: {
-            clientDataJSON: encode(response.clientDataJSON as unknown as string),
-            attestationObject: encode(attestationResponse.attestationObject as unknown as string),
+            clientDataJSON: encode(attestationResponse.clientDataJSON),
+            attestationObject: encode(attestationResponse.attestationObject),
             transports: attestationResponse.getTransports ? attestationResponse.getTransports() : [],
         }
     };
