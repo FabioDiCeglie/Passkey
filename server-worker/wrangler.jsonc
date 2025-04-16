@@ -9,7 +9,13 @@
 	"compatibility_date": "2025-04-16",
 	"observability": {
 		"enabled": true
-	}
+	},
+	"kv_namespaces": [
+		{
+			"binding": "users",
+			"id": "13b27c7de96e4b538a32dc8ab4f02f1a"
+		}
+	]
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
@@ -45,3 +51,4 @@
 	 */
 	// "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
 }
+
