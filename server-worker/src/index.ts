@@ -1,18 +1,26 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import { Hono } from 'hono';
+import { sessionMiddleware, CookieStore } from 'hono-sessions';
 
-export default {
-	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
-	},
-} satisfies ExportedHandler<Env>;
+const app = new Hono();
+const store = new CookieStore();
+
+app.use(
+	sessionMiddleware({
+		store,
+		encryptionKey: 'encryption_key_at_least_32_characters_long',
+		expireAfterSeconds: 900,
+		cookieOptions: {
+			path: '/',
+			sameSite: 'lax',
+			httpOnly: true,
+		},
+	})
+);
+
+let isConfigured = false;
+let rpID, expectedOrigin;
+let rpName = 'WebAuthn';
+
+app.get('/', (c) => c.text('Hello World!'));
+
+export default app;
