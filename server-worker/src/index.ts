@@ -1,4 +1,4 @@
-import { generateRegistrationOptions } from '@simplewebauthn/server';
+import { generateRegistrationOptions, verifyRegistrationResponse } from '@simplewebauthn/server';
 import { Hono } from 'hono';
 import { sessionMiddleware, CookieStore } from 'hono-sessions';
 
@@ -34,7 +34,7 @@ app.use(async (c, next) => {
 	return await next();
 });
 
-app.get('/healthcheck', (c) => new Response(null, { status: 204 }));
+app.get('/healthcheck', (c) => c.json(204));
 
 /**
  * WebAuthn registration endpoint
@@ -46,8 +46,8 @@ app.post('/register', async (c) => {
 	try {
 		const env = c.env as Env;
 		// Retrieve existing user or create a new one if not found
-		const user = JSON.parse(await env.users.get(username) || 'null') || { username, passKeys: [] };
-		
+		const user = JSON.parse(await env.users.get(username) || JSON.stringify({ username, passKeys: [] }));
+
 		// Configure WebAuthn registration options
 		const opts = {
 			rpID,
@@ -65,15 +65,74 @@ app.post('/register', async (c) => {
 			})),
 		}
 		const options = await generateRegistrationOptions(opts);
-		
+
 		// Store challenge and user data in session for verification
 		// @ts-ignore
 		(c.get('session') as Record<string, any>).set('challenge', JSON.stringify({ user, options }));
 		return c.json(options);
-
 	} catch (err) {
 		console.error(err);
 		return c.json({ error: `Error registering user ${username}: ${err}` }, 500);
+	}
+});
+
+/**
+ * WebAuthn registration completion endpoint
+ * Verifies the registration response from the client and saves the new passkey
+ * to the user's account if verification is successful
+ */
+app.post('/register/complete', async (c) => {
+	const response = await c.req.json();
+	// Retrieve the challenge and user data from the session
+	// @ts-ignore
+	const { options, user } = JSON.parse((c.get('session') as Record<string, any>).get('challenge'));
+	let verification;
+	try {
+		// Configure verification options
+		const opts = {
+			response,
+			expectedOrigin,
+			expectedRPID: rpID,
+			requireUserVerification: true,
+			expectedChallenge: options.challenge,
+		}
+		// Verify the authenticator's response against our challenge
+		verification = await verifyRegistrationResponse(opts);
+
+		const { verified, registrationInfo } = verification;
+		
+		if (verified && registrationInfo) {
+			// Extract credential details from the verification result
+			const { counter, credentialID, credentialBackedUp, credentialPublicKey, credentialDeviceType } = registrationInfo;
+	
+			// Check if this credential already exists for the user
+			const passKey = user.passKeys.find((key: { id: string }) => key.id === credentialID);
+			if(!passKey) {
+				// Store the new passkey in the user's account
+				user.passKeys.push({
+					counter,
+					id: credentialID,
+					backedUp: credentialBackedUp,
+					webAuthnUserID: options.user.id,
+					deviceType: credentialDeviceType,
+					transports: response.response.transports,
+					// Convert Uint8Array to regular array for storage
+					credentialPublicKey: Array.from(credentialPublicKey),
+				});
+			}
+	
+			// Save the updated user data
+			const env = c.env as Env;
+			await env.users.put(user.username, JSON.stringify(user));
+	
+			// Clear the challenge from the session
+			// @ts-ignore
+			(c.get('session') as Record<string, any>).set('challenge', null);
+			return c.json({ verified });
+		}
+	} catch (err) {
+		console.error(err);
+		return c.json({ error: `Error verifying registration response: ${err}` }, 500);
 	}
 });
 
