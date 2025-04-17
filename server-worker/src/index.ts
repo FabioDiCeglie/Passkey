@@ -6,7 +6,6 @@ import { cors } from 'hono/cors';
 const app = new Hono();
 const store = new CookieStore();
 
-// Add CORS middleware
 app.use(cors({
 	origin: ['http://localhost:5173'],
 	allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
