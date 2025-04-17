@@ -1,9 +1,18 @@
 import { generateRegistrationOptions, verifyRegistrationResponse } from '@simplewebauthn/server';
 import { Hono } from 'hono';
 import { sessionMiddleware, CookieStore } from 'hono-sessions';
+import { cors } from 'hono/cors';
 
 const app = new Hono();
 const store = new CookieStore();
+
+// Add CORS middleware
+app.use(cors({
+	origin: ['http://localhost:5173'],
+	allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+	allowHeaders: ['Content-Type', 'Authorization'],
+	credentials: true,
+}));
 
 app.use(
 	sessionMiddleware({
@@ -27,7 +36,11 @@ app.use(async (c, next) => {
 	if (isConfigured) {
 		return await next();
 	}
-	const { origin, hostname } = new URL(c.req.url);
+	const url = c.req.header('Origin');
+	if (!url) {
+		return c.json({ error: 'Origin header is required' }, 400);
+	}
+	const { origin, hostname } = new URL(url);
 	expectedOrigin = origin;
 	rpID = hostname;
 	isConfigured = true;
@@ -98,26 +111,25 @@ app.post('/register/complete', async (c) => {
 		}
 		// Verify the authenticator's response against our challenge
 		verification = await verifyRegistrationResponse(opts);
-
 		const { verified, registrationInfo } = verification;
 		
 		if (verified && registrationInfo) {
 			// Extract credential details from the verification result
-			const { counter, credentialID, credentialBackedUp, credentialPublicKey, credentialDeviceType } = registrationInfo;
+			const { credentialBackedUp, credentialDeviceType, credential } = registrationInfo;
 	
 			// Check if this credential already exists for the user
-			const passKey = user.passKeys.find((key: { id: string }) => key.id === credentialID);
+			const passKey = user.passKeys.find((key: { id: string }) => key.id === credential.id);
 			if(!passKey) {
 				// Store the new passkey in the user's account
 				user.passKeys.push({
-					counter,
-					id: credentialID,
+					counter: credential.counter,
+					id: credential.id,
 					backedUp: credentialBackedUp,
 					webAuthnUserID: options.user.id,
 					deviceType: credentialDeviceType,
 					transports: response.response.transports,
 					// Convert Uint8Array to regular array for storage
-					credentialPublicKey: Array.from(credentialPublicKey),
+					credentialPublicKey: Array.from(credential.publicKey),
 				});
 			}
 	
