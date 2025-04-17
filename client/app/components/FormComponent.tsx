@@ -1,5 +1,6 @@
-import { createPublicKeyPairWithChallenge } from '../../lib/helpers';
-import { getChallenge, loginWithUserCredentials } from '../../lib/api';
+import { useState } from 'react';
+import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
+import { register, verifyRegistration } from '../../lib/api';
 
 type FormComponentProps = {
   title: string;
@@ -16,17 +17,39 @@ const FormComponent: React.FC<FormComponentProps> = ({
   linkHref,
   linkPrompt,
 }) => {
+  const [isLoggedIn, setIsLoggedIn] = useState({
+    error: '',
+    isLoading: false,
+    verified: false,
+  });
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const challenge = await getChallenge(event);
-    const newCredentials = await createPublicKeyPairWithChallenge(challenge);
-    if (newCredentials) {
-      const login = await loginWithUserCredentials(newCredentials);
-      if (login) {
-        window.location.href = '/';
-      }
+    const challenge = await register(event);
+    // @ts-ignore
+    const signedChallenge = await startRegistration(challenge).catch((err) => {
+      console.error(err);
+      throw err;
+    });
+
+    const verification: { verified: boolean } = await verifyRegistration(signedChallenge);
+
+    if(verification.verified) {
+      setIsLoggedIn({
+        error: '',
+        isLoading: false,
+        verified: true,
+      });
+      window.location.href = '/';
+    } else {
+      setIsLoggedIn({
+        error: 'Registration failed',
+        isLoading: false,
+        verified: false,
+      });
     }
   };
+
   return (
     <div className='flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8'>
       <div className='sm:mx-auto sm:w-full sm:max-w-sm'>
