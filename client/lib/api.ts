@@ -10,7 +10,7 @@ export const register = async (event: React.FormEvent<HTMLFormElement>) => {
   );
 };
 
-export const verifyRegistration = async (signedChallenge: RegistrationResponseJSON) => {
+export const verifyRegistration = async (signedChallenge: RegistrationResponseJSON): Promise<{ verified: boolean }> => {
   return fetchWithErrorHandling(
     `${import.meta.env.VITE_API_URL}/register/complete`,
     { method: 'POST', body: JSON.stringify(signedChallenge), credentials: 'include' },
