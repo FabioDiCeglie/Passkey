@@ -1,4 +1,4 @@
-import { generateAuthenticationOptions, generateRegistrationOptions, verifyRegistrationResponse } from '@simplewebauthn/server';
+import { AuthenticatorTransportFuture, generateAuthenticationOptions, generateRegistrationOptions, verifyAuthenticationResponse, verifyRegistrationResponse } from '@simplewebauthn/server';
 import { Hono } from 'hono';
 import { sessionMiddleware, CookieStore } from 'hono-sessions';
 import { cors } from 'hono/cors';
@@ -57,9 +57,14 @@ app.post('/register', async (c) => {
 	const username = (await c.req.json()).username;
 	try {
 		const env = c.env as Env;
-		// Retrieve existing user or create a new one if not found
-		const user = JSON.parse(await env.users.get(username) || JSON.stringify({ username, passKeys: [] }));
-
+		const existingUser = await env.users.get(username);
+		
+		if (existingUser) {
+			return c.json({ error: 'Username already registered. Please log in or use a different username.' }, 400);
+		}
+		
+		// Create a new user
+		const user = { username, passKeys: [] };
 		// Configure WebAuthn registration options
 		const opts = {
 			rpID,
@@ -71,13 +76,13 @@ app.post('/register', async (c) => {
 				residentKey: 'discouraged' as "discouraged",
 			},
 			// Exclude existing credentials to prevent duplicates
-			excludeCredentials: user.passKeys.map((key: { credentialID: string, transports: string[] }) => ({
+			excludeCredentials: user.passKeys.map((key: { credentialID: string, transports: AuthenticatorTransportFuture[] }) => ({
 				id: key.credentialID,
 				transports: key.transports,
 			})),
 		}
-		const options = await generateRegistrationOptions(opts);
 
+		const options = await generateRegistrationOptions(opts);
 		// Store challenge and user data in session for verification
 		// @ts-ignore
 		(c.get('session') as Record<string, any>).set('challenge', JSON.stringify({ user, options }));
@@ -111,14 +116,14 @@ app.post('/register/complete', async (c) => {
 		// Verify the authenticator's response against our challenge
 		verification = await verifyRegistrationResponse(opts);
 		const { verified, registrationInfo } = verification;
-		
+
 		if (verified && registrationInfo) {
 			// Extract credential details from the verification result
 			const { credentialBackedUp, credentialDeviceType, credential } = registrationInfo;
-	
+
 			// Check if this credential already exists for the user
 			const passKey = user.passKeys.find((key: { id: string }) => key.id === credential.id);
-			if(!passKey) {
+			if (!passKey) {
 				// Store the new passkey in the user's account
 				user.passKeys.push({
 					counter: credential.counter,
@@ -131,11 +136,11 @@ app.post('/register/complete', async (c) => {
 					credentialPublicKey: Array.from(credential.publicKey),
 				});
 			}
-	
+
 			// Save the updated user data
 			const env = c.env as Env;
 			await env.users.put(user.username, JSON.stringify(user));
-	
+
 			// Clear the challenge from the session
 			// @ts-ignore
 			(c.get('session') as Record<string, any>).set('challenge', null);
@@ -155,12 +160,12 @@ app.post('/register/complete', async (c) => {
 app.post('/login', async (c) => {
 	const env = c.env as Env;
 	const usernameFromRequest: string = (await c.req.json()).username as string;
-	if(!usernameFromRequest) {
+	if (!usernameFromRequest) {
 		return c.json({ error: 'Username is required' }, 400);
 	}
 	// @ts-ignore
 	const user = JSON.parse(await env.users.get(usernameFromRequest));
-	
+
 	// Handle case where user doesn't exist
 	if (!user) {
 		return c.json({ error: 'User not found' }, 404);
@@ -182,6 +187,73 @@ app.post('/login', async (c) => {
 	} catch (err) {
 		console.error(err);
 		return c.json({ error: `Error logging in user ${usernameFromRequest}: ${err}` }, 500);
+	}
+});
+
+/**
+ * WebAuthn authentication completion endpoint
+ * 
+ * This endpoint verifies the authentication response from a client's passkey/authenticator
+ * against the challenge that was previously generated during the login request.
+ * If verification succeeds, the user is considered authenticated.
+ */
+app.post('/login/complete', async (c) => {
+	try {
+		const body = await c.req.json();
+		
+		// @ts-ignore
+		const { options, user } = JSON.parse((c.get('session') as Record<string, any>).get('challenge'));
+		
+		// Find the matching passkey for this authentication attempt
+		// Each user can have multiple passkeys (from different devices)
+		const passKey = user.passKeys.find((key: { id: string }) => key.id === body.id);
+		if (!passKey) {
+			return c.json({ error: `Could not find passkey ${body.id} for user ${user.id}` }, 400);
+		}
+
+		// Configure verification options for the authentication response
+		// These parameters ensure the response matches our security expectations
+		const opts = {
+			response: body,             
+			credential: passKey,        
+			expectedOrigin,             
+			expectedRPID: rpID,       
+			authenticator: passKey,      
+			requireUserVerification: true, 
+			expectedChallenge: options.challenge, 
+		}
+		
+		// Verify the authentication response against our stored challenge
+		// This checks the cryptographic signature from the authenticator
+		let verification;
+		verification = await verifyAuthenticationResponse(opts);
+		const { verified, authenticationInfo } = verification;
+
+		if (verified) {
+			// Update the credential counter to prevent replay attacks
+			// Each successful authentication increments this counter
+			passKey.counter = authenticationInfo.newCounter;
+			
+			// Update the user's passkey list with the updated counter
+			user.passKeys = user.passKeys.map((key: { id: string }) => 
+				key.id === body.id ? passKey : key
+			);
+			
+			// Save the updated user data to persistent storage
+			const env = c.env as Env;
+			await env.users.put(user.username, JSON.stringify(user));
+		}
+
+		// Clear the challenge from the session for security
+		// This prevents the same challenge from being reused
+		//@ts-ignore
+		(c.get('session') as Record<string, any>).set('challenge', null);
+		
+		// Return the verification result to the client
+		return c.json({ verified });
+	} catch (err) {
+		console.error(err);
+		return c.json({ error: `Error verifying login response: ${err}` }, 500);
 	}
 });
 
