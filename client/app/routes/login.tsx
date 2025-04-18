@@ -27,24 +27,24 @@ export default function Login() {
       throw err;
     });
 
-    // const verification: { verified: boolean } = await verifyLogin(
-    //   signedChallenge
-    // );
+    const verification: { verified: boolean } = await verifyLogin(
+      signedChallenge
+    );
 
-    // if (verification.verified) {
-    //   setIsLoggedIn({
-    //     error: '',
-    //     isLoading: false,
-    //     verified: true,
-    //   });
-    //   window.location.href = '/';
-    // } else {
-    //   setIsLoggedIn({
-    //     error: 'Login failed',
-    //     isLoading: false,
-    //     verified: false,
-    //   });
-    // }
+    if (verification.verified) {
+      setIsLoggedIn({
+        error: '',
+        isLoading: false,
+        verified: true,
+      });
+      window.location.href = '/';
+    } else {
+      setIsLoggedIn({
+        error: 'Login failed',
+        isLoading: false,
+        verified: false,
+      });
+    }
   };
   return (
     <FormComponent

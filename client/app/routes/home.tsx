@@ -72,11 +72,11 @@ export default function Home() {
           <button 
             className='bg-teal-500 text-white px-6 py-3 rounded-full shadow-md hover:bg-teal-400 transition duration-300 ease-in-out cursor-pointer'
             onClick={() => {
-              setIsLoggedIn({
-                value: true,
-                error: '',
-                isLoading: false,
-              });
+              // setIsLoggedIn({
+              //   value: true,
+              //   error: '',
+              //   isLoading: false,
+              // });
             }}
           >
             <span className='mr-2'>🔑</span> Log in

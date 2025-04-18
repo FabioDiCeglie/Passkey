@@ -220,7 +220,7 @@ app.post('/login/complete', async (c) => {
 			expectedRPID: rpID,       
 			authenticator: passKey,      
 			requireUserVerification: true, 
-			expectedChallenge: options.challenge, 
+			expectedChallenge: options.challenge,
 		}
 		
 		// Verify the authentication response against our stored challenge
