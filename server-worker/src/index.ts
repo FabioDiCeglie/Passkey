@@ -1,4 +1,4 @@
-import { generateRegistrationOptions, verifyRegistrationResponse } from '@simplewebauthn/server';
+import { generateAuthenticationOptions, generateRegistrationOptions, verifyRegistrationResponse } from '@simplewebauthn/server';
 import { Hono } from 'hono';
 import { sessionMiddleware, CookieStore } from 'hono-sessions';
 import { cors } from 'hono/cors';
@@ -144,6 +144,44 @@ app.post('/register/complete', async (c) => {
 	} catch (err) {
 		console.error(err);
 		return c.json({ error: `Error verifying registration response: ${err}` }, 500);
+	}
+});
+
+/**
+ * WebAuthn login endpoint
+ * Generates authentication options for an existing passkey login and stores
+ * the challenge in the user's session for later verification
+ */
+app.post('/login', async (c) => {
+	const env = c.env as Env;
+	const usernameFromRequest: string = (await c.req.json()).username as string;
+	if(!usernameFromRequest) {
+		return c.json({ error: 'Username is required' }, 400);
+	}
+	// @ts-ignore
+	const user = JSON.parse(await env.users.get(usernameFromRequest));
+	
+	// Handle case where user doesn't exist
+	if (!user) {
+		return c.json({ error: 'User not found' }, 404);
+	}
+
+	try {
+		const opts = {
+			rpID,
+			allowCredentials: user.passKeys.map((key: { id: string, transports: string[] }) => ({
+				id: key.id,
+				transports: key.transports,
+			})),
+		}
+		const options = await generateAuthenticationOptions(opts);
+
+		// @ts-ignore
+		(c.get('session') as Record<string, any>).set('challenge', JSON.stringify({ user, options }));
+		return c.json(options);
+	} catch (err) {
+		console.error(err);
+		return c.json({ error: `Error logging in user ${usernameFromRequest}: ${err}` }, 500);
 	}
 });
 
