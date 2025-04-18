@@ -18,6 +18,23 @@ export const verifyRegistration = async (signedChallenge: RegistrationResponseJS
   );
 };
 
+export const login = async (event: React.FormEvent<HTMLFormElement>) => {
+  const username = new FormData(event.target as HTMLFormElement).get('username');
+  return fetchWithErrorHandling(
+    `${import.meta.env.VITE_API_URL}/login`,
+    { method: 'POST', body: JSON.stringify({ username }), credentials: 'include'  },
+    "Error during registration"
+  );
+};
+
+export const verifyLogin = async (signedChallenge: RegistrationResponseJSON): Promise<{ verified: boolean }> => {
+  return fetchWithErrorHandling(
+    `${import.meta.env.VITE_API_URL}/login/complete`,
+    { method: 'POST', body: JSON.stringify(signedChallenge), credentials: 'include' },
+    "Error during login verification"
+  );
+};
+
 export const logout = async () => {
   return fetchWithErrorHandling(
     `${import.meta.env.VITE_API_URL}/logout`,
