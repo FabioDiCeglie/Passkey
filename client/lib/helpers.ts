@@ -1,5 +1,3 @@
-import { decode, encode } from './base64url';
-
 export const fetchWithErrorHandling = async <T>(
     url: string,
     options: RequestInit = {},
@@ -9,7 +7,8 @@ export const fetchWithErrorHandling = async <T>(
         const response = await fetch(url, options);
 
         if (!response.ok) {
-            throw new Error(`${errorMessage}: Server responded with status ${response.status}`);
+            const resp = await response.json();
+            throw resp.error;
         }
         return await response.json() as T;
     } catch (error) {

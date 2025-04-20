@@ -167,7 +167,7 @@ app.post('/login', async (c) => {
 	const user = JSON.parse(await env.users.get(usernameFromRequest));
 	// Handle case where user doesn't exist
 	if (!user) {
-		return c.json({ error: 'User not found' }, 404);
+		return c.json({ error: 'User not found please register' }, 404);
 	}
 
 	try {
@@ -228,7 +228,7 @@ app.post('/login/complete', async (c) => {
 		// This checks the cryptographic signature from the authenticator
 		let verification;
 		verification = await verifyAuthenticationResponse(opts);
-		console.log('verification', verification);
+
 		const { verified, authenticationInfo } = verification;
 
 		if (verified) {
@@ -251,7 +251,6 @@ app.post('/login/complete', async (c) => {
 		//@ts-ignore
 		(c.get('session') as Record<string, any>).set('challenge', null);
 		
-		// Return the verification result to the client
 		return c.json({ verified });
 	} catch (err) {
 		console.error(err);
