@@ -11,7 +11,7 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState({
-    value: false,
+    value: true,
     error: '',
     isLoading: false,
   });
@@ -23,7 +23,7 @@ export default function Home() {
       isLoading: true,
     });
     logout().then((response) => {
-      if ((response as { ok: boolean }).ok) {
+      if (response.message) {
         setIsLoggedIn({
           value: false,
           error: '',
@@ -31,6 +31,7 @@ export default function Home() {
         });
       }
     }).catch((error) => {
+      console.error(error);
       setIsLoggedIn({
         value: false,
         error: 'Logout failed',
