@@ -1,8 +1,10 @@
-import type { Route } from './+types/home';
-import FormComponent from '../components/FormComponent';
+import {
+  startRegistration
+} from '@simplewebauthn/browser';
 import { useState } from 'react';
-import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
 import { register, verifyRegistration } from '../../lib/api';
+import FormComponent from '../components/FormComponent';
+import type { Route } from './+types/home';
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -20,27 +22,35 @@ export default function SignUp() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const challenge = await register(event);
-    // @ts-ignore
-    const signedChallenge = await startRegistration(challenge).catch((err) => {
+    try {
+      setIsSignedUp((prev) => ({
+        ...prev,
+        isLoading: true,
+      }));
+      const challenge = await register(event);
+      const signedChallenge = await startRegistration(challenge).catch(
+        (err) => {
+          console.error(err);
+          throw err;
+        }
+      );
+
+      const verification: { verified: boolean } = await verifyRegistration(
+        signedChallenge
+      );
+
+      if (verification.verified) {
+        setIsSignedUp({
+          error: '',
+          isLoading: false,
+          verified: true,
+        });
+        window.location.href = '/';
+      }
+    } catch (err) {
       console.error(err);
-      throw err;
-    });
-
-    const verification: { verified: boolean } = await verifyRegistration(
-      signedChallenge
-    );
-
-    if (verification.verified) {
       setIsSignedUp({
-        error: '',
-        isLoading: false,
-        verified: true,
-      });
-      window.location.href = '/';
-    } else {
-      setIsSignedUp({
-        error: 'Registration failed',
+        error: err as string,
         isLoading: false,
         verified: false,
       });
@@ -55,6 +65,7 @@ export default function SignUp() {
       linkHref='/login'
       linkPrompt='Already have an account?'
       handleSubmit={handleSubmit}
+      isAuthorized={isSignedUp}
     />
   );
 }

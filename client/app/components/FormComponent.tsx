@@ -55,7 +55,7 @@ const FormComponent: React.FC<FormComponentProps> = ({
           </div>
         )}
 
-        {!isAuthorized.isLoading ? (
+        {isAuthorized.isLoading ? (
           <button
             disabled
             type='button'

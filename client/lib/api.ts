@@ -1,7 +1,7 @@
-import type { RegistrationResponseJSON, AuthenticationResponseJSON, PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/types";
+import type { RegistrationResponseJSON, AuthenticationResponseJSON, PublicKeyCredentialRequestOptionsJSON, PublicKeyCredentialCreationOptionsJSON } from "@simplewebauthn/types";
 import { fetchWithErrorHandling } from "./helpers";
 
-export const register = async (event: React.FormEvent<HTMLFormElement>) => {
+export const register = async (event: React.FormEvent<HTMLFormElement>): Promise<{optionsJSON: PublicKeyCredentialCreationOptionsJSON}> => {
   const username = new FormData(event.target as HTMLFormElement).get('username');
   return fetchWithErrorHandling(
     `${import.meta.env.VITE_API_URL}/register`,
