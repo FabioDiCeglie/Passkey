@@ -1,9 +1,16 @@
 import { AuthenticatorTransportFuture, generateAuthenticationOptions, generateRegistrationOptions, verifyAuthenticationResponse, verifyRegistrationResponse } from '@simplewebauthn/server';
 import { Hono } from 'hono';
-import { sessionMiddleware, CookieStore } from 'hono-sessions';
+import { sessionMiddleware, CookieStore, Session } from 'hono-sessions';
 import { cors } from 'hono/cors';
 
-const app = new Hono();
+type HonoEnv = {
+	Variables: {
+		session: Session;
+	};
+	Bindings: Env;
+};
+
+const app = new Hono<HonoEnv>();
 const store = new CookieStore();
 
 app.use(cors({
@@ -84,7 +91,6 @@ app.post('/register', async (c) => {
 
 		const options = await generateRegistrationOptions(opts);
 		// Store challenge and user data in session for verification
-		// @ts-ignore
 		(c.get('session') as Record<string, any>).set('challenge', JSON.stringify({ user, options }));
 		return c.json(options);
 	} catch (err) {
@@ -142,7 +148,6 @@ app.post('/register/complete', async (c) => {
 			await env.users.put(user.username, JSON.stringify(user));
 
 			// Clear the challenge from the session
-			// @ts-ignore
 			(c.get('session') as Record<string, any>).set('challenge', null);
 			return c.json({ verified });
 		}
@@ -180,7 +185,6 @@ app.post('/login', async (c) => {
 		}
 		const options = await generateAuthenticationOptions(opts);
 
-		// @ts-ignore
 		(c.get('session') as Record<string, any>).set('challenge', JSON.stringify({ user, options }));
 		return c.json(options);
 	} catch (err) {
@@ -200,7 +204,6 @@ app.post('/login/complete', async (c) => {
 	try {
 		const body = await c.req.json();
 		
-		// @ts-ignore
 		const { options, user } = JSON.parse((c.get('session') as Record<string, any>).get('challenge'));
 		
 		// Find the matching passkey for this authentication attempt
@@ -248,13 +251,27 @@ app.post('/login/complete', async (c) => {
 
 		// Clear the challenge from the session for security
 		// This prevents the same challenge from being reused
-		//@ts-ignore
 		(c.get('session') as Record<string, any>).set('challenge', null);
 		
 		return c.json({ verified });
 	} catch (err) {
 		console.error(err);
 		return c.json({ error: `Error verifying login response: ${err}` }, 500);
+	}
+});
+
+/**
+ * Logout endpoint
+ * Clears the user's session data, effectively logging them out.
+ */
+app.post('/logout', async (c) => {
+	try {
+		(c.get('session') as Record<string, any>).set('challenge', null);
+
+		return c.json({ message: 'Logged out successfully' });
+	} catch (err) {
+		console.error(err);
+		return c.json({ error: `Error logging out: ${err}` }, 500);
 	}
 });
 
