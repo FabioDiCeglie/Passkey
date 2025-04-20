@@ -165,7 +165,6 @@ app.post('/login', async (c) => {
 	}
 	// @ts-ignore
 	const user = JSON.parse(await env.users.get(usernameFromRequest));
-
 	// Handle case where user doesn't exist
 	if (!user) {
 		return c.json({ error: 'User not found' }, 404);
@@ -210,16 +209,18 @@ app.post('/login/complete', async (c) => {
 		if (!passKey) {
 			return c.json({ error: `Could not find passkey ${body.id} for user ${user.id}` }, 400);
 		}
-
+		const credentialPublicKey = new Uint8Array(passKey.credentialPublicKey);
 		// Configure verification options for the authentication response
 		// These parameters ensure the response matches our security expectations
 		const opts = {
-			response: body,             
-			credential: passKey,        
+			response: body,  
+			credential: {
+				...passKey,
+				publicKey: credentialPublicKey,
+			},
 			expectedOrigin,             
-			expectedRPID: rpID,       
-			authenticator: passKey,      
-			requireUserVerification: true, 
+			expectedRPID: rpID,           
+			requireUserVerification: false, 
 			expectedChallenge: options.challenge,
 		}
 		
@@ -227,6 +228,7 @@ app.post('/login/complete', async (c) => {
 		// This checks the cryptographic signature from the authenticator
 		let verification;
 		verification = await verifyAuthenticationResponse(opts);
+		console.log('verification', verification);
 		const { verified, authenticationInfo } = verification;
 
 		if (verified) {
