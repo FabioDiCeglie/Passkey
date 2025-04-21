@@ -38,7 +38,15 @@ export const verifyLogin = async (signedChallenge: AuthenticationResponseJSON): 
 export const logout = async (): Promise<{ message: string }> => {
   return fetchWithErrorHandling(
     `${import.meta.env.VITE_API_URL}/logout`,
-    { method: 'POST' },
+    { method: 'POST', credentials: 'include' },
     "Error during logout"
   );
+};
+
+export const checkSession = async (): Promise<{ loggedIn: boolean; username?: string }> => {
+	return fetchWithErrorHandling(
+		`${import.meta.env.VITE_API_URL}/auth`,
+		{ method: 'GET', credentials: 'include' },
+		"Error checking session status"
+	);
 };

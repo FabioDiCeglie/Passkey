@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { login, verifyLogin } from '../../lib/api';
 import FormComponent from '../components/FormComponent';
 import type { Route } from './+types/home';
+import { useNavigate } from 'react-router';
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -12,6 +13,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Login() {
+  const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState({
     error: '',
     isLoading: false,
@@ -43,7 +45,7 @@ export default function Login() {
           isLoading: false,
           verified: true,
         });
-        window.location.href = '/';
+        navigate('/');
       }
     } catch (err) {
       console.error(err);

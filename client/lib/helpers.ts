@@ -5,7 +5,6 @@ export const fetchWithErrorHandling = async <T>(
 ): Promise<T> => {
     try {
         const response = await fetch(url, options);
-
         if (!response.ok) {
             const resp = await response.json();
             throw resp.error;

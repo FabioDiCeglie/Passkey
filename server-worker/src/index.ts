@@ -24,7 +24,7 @@ app.use(
 	sessionMiddleware({
 		store,
 		encryptionKey: 'encryption_key_at_least_32_characters_long',
-		expireAfterSeconds: 900,
+		expireAfterSeconds: 86400,
 		cookieOptions: {
 			path: '/',
 			sameSite: 'lax',
@@ -65,11 +65,11 @@ app.post('/register', async (c) => {
 	try {
 		const env = c.env as Env;
 		const existingUser = await env.users.get(username);
-		
+
 		if (existingUser) {
 			return c.json({ error: 'Username already registered. Please log in or use a different username.' }, 400);
 		}
-		
+
 		// Create a new user
 		const user = { username, passKeys: [] };
 		// Configure WebAuthn registration options
@@ -203,9 +203,9 @@ app.post('/login', async (c) => {
 app.post('/login/complete', async (c) => {
 	try {
 		const body = await c.req.json();
-		
+
 		const { options, user } = JSON.parse((c.get('session') as Record<string, any>).get('challenge'));
-		
+
 		// Find the matching passkey for this authentication attempt
 		// Each user can have multiple passkeys (from different devices)
 		const passKey = user.passKeys.find((key: { id: string }) => key.id === body.id);
@@ -216,17 +216,17 @@ app.post('/login/complete', async (c) => {
 		// Configure verification options for the authentication response
 		// These parameters ensure the response matches our security expectations
 		const opts = {
-			response: body,  
+			response: body,
 			credential: {
 				...passKey,
 				publicKey: credentialPublicKey,
 			},
-			expectedOrigin,             
-			expectedRPID: rpID,           
-			requireUserVerification: false, 
+			expectedOrigin,
+			expectedRPID: rpID,
+			requireUserVerification: false,
 			expectedChallenge: options.challenge,
 		}
-		
+
 		// Verify the authentication response against our stored challenge
 		// This checks the cryptographic signature from the authenticator
 		let verification;
@@ -238,21 +238,24 @@ app.post('/login/complete', async (c) => {
 			// Update the credential counter to prevent replay attacks
 			// Each successful authentication increments this counter
 			passKey.counter = authenticationInfo.newCounter;
-			
+
 			// Update the user's passkey list with the updated counter
-			user.passKeys = user.passKeys.map((key: { id: string }) => 
+			user.passKeys = user.passKeys.map((key: { id: string }) =>
 				key.id === body.id ? passKey : key
 			);
-			
+
 			// Save the updated user data to persistent storage
 			const env = c.env as Env;
 			await env.users.put(user.username, JSON.stringify(user));
+
+			// *** Mark session as authenticated ***
+			(c.get('session') as Record<string, any>).set('currentUser', user.username);
 		}
 
 		// Clear the challenge from the session for security
 		// This prevents the same challenge from being reused
 		(c.get('session') as Record<string, any>).set('challenge', null);
-		
+
 		return c.json({ verified });
 	} catch (err) {
 		console.error(err);
@@ -267,6 +270,7 @@ app.post('/login/complete', async (c) => {
 app.post('/logout', async (c) => {
 	try {
 		(c.get('session') as Record<string, any>).set('challenge', null);
+		(c.get('session') as Record<string, any>).set('currentUser', null);
 
 		return c.json({ message: 'Logged out successfully' });
 	} catch (err) {
@@ -275,4 +279,23 @@ app.post('/logout', async (c) => {
 	}
 });
 
-export default app;
+/**
+ * Session check endpoint
+ * Checks if the current session is associated with an authenticated user.
+ */
+app.get('/auth', async (c) => {
+	try {
+		console.log('session', c.get('session'))
+		const username = c.get('session').get('currentUser');
+		if (username) {
+			return c.json({ loggedIn: true, username });
+		} else {
+			return c.json({ loggedIn: false });
+		}
+	} catch (err) {
+		console.error(err);
+		return c.json({ error: `Error checking authentication: ${err}` }, 500);
+	}
+});
+
+export default app;	

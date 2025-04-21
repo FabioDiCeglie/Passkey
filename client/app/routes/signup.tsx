@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { register, verifyRegistration } from '../../lib/api';
 import FormComponent from '../components/FormComponent';
 import type { Route } from './+types/home';
+import { useNavigate } from 'react-router';
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -14,6 +15,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function SignUp() {
+  const navigate = useNavigate();
   const [isSignedUp, setIsSignedUp] = useState({
     error: '',
     isLoading: false,
@@ -45,7 +47,7 @@ export default function SignUp() {
           isLoading: false,
           verified: true,
         });
-        window.location.href = '/';
+        navigate('/');
       }
     } catch (err) {
       console.error(err);
