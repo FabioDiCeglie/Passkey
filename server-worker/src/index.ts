@@ -1,8 +1,7 @@
-import { AuthenticatorTransportFuture, generateAuthenticationOptions, generateRegistrationOptions, verifyAuthenticationResponse, verifyRegistrationResponse } from '@simplewebauthn/server';
 import { Hono } from 'hono';
-import { sessionMiddleware, CookieStore, Session } from 'hono-sessions';
+import { CookieStore, Session, sessionMiddleware } from 'hono-sessions';
 import { cors } from 'hono/cors';
-import authRoutes from './routes/auth'; 
+import authRoutes from './routes/auth';
 
 export type HonoEnv = {
 	Variables: {
@@ -22,13 +21,14 @@ app.use(cors({
 }));
 
 app.use(
+	'*',
 	sessionMiddleware({
 		store,
 		encryptionKey: 'encryption_key_at_least_32_characters_long',
 		expireAfterSeconds: 86400,
 		cookieOptions: {
+			sameSite: 'Lax',
 			path: '/',
-			sameSite: 'lax',
 			httpOnly: true,
 		},
 	})
@@ -37,6 +37,5 @@ app.use(
 app.get('/healthcheck', (c) => c.json(204));
 
 app.route('/api', authRoutes);
-
 
 export default app;	
