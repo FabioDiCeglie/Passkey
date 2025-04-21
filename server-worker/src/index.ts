@@ -21,7 +21,7 @@ export const cookieSessionMiddleware = createMiddleware(async (c, next) => {
 		encryptionKey: c.env.SESSION_ENCRYPTION_KEY || "8f2a1b9c7d3e5f4g6h8i0j2k4l6m8n0p2q",
 		expireAfterSeconds: 604800,
 		cookieOptions: {
-			sameSite: 'Lax',
+			sameSite: 'None',
 			path: '/',
 			httpOnly: true,
 			secure: true,
