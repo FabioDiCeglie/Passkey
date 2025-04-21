@@ -60,7 +60,7 @@ authRoutes.post('/register', async (c) => {
 
 		const options = await generateRegistrationOptions(opts);
 		// Store challenge and user data in session for verification
-		(c.get('session') as Record<string, any>).set('challenge', JSON.stringify({ user, options }));
+		(c.get('session')).set('challenge', JSON.stringify({ user, options }));
 		return c.json(options);
 	} catch (err) {
 		console.error(err);
@@ -76,8 +76,7 @@ authRoutes.post('/register', async (c) => {
 authRoutes.post('/register/complete', async (c) => {
 	const response = await c.req.json();
 	// Retrieve the challenge and user data from the session
-	// @ts-ignore
-	const { options, user } = JSON.parse((c.get('session') as Record<string, any>).get('challenge'));
+	const { options, user } = JSON.parse((c.get('session')).get('challenge'));
 	let verification;
 	try {
 		// Configure verification options
