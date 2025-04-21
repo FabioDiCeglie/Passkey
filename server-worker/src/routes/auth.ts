@@ -116,9 +116,9 @@ authRoutes.post('/register/complete', async (c) => {
 			await env.users.put(user.username, JSON.stringify(user));
 
 			// Clear the challenge from the session
-			(c.get('session') as Record<string, any>).set('challenge', null);
+			(c.get('session')).set('challenge', null);
 			// *** Mark session as authenticated ***
-			(c.get('session') as Record<string, any>).set('currentUser', user.username);
+			(c.get('session')).set('currentUser', user.username);
 			return c.json({ verified });
 		}
 	} catch (err) {
@@ -155,7 +155,7 @@ authRoutes.post('/login', async (c) => {
 		}
 		const options = await generateAuthenticationOptions(opts);
 
-		(c.get('session') as Record<string, any>).set('challenge', JSON.stringify({ user, options }));
+		(c.get('session')).set('challenge', JSON.stringify({ user, options }));
 		return c.json(options);
 	} catch (err) {
 		console.error(err);
@@ -174,7 +174,7 @@ authRoutes.post('/login/complete', async (c) => {
 	try {
 		const body = await c.req.json();
 
-		const { options, user } = JSON.parse((c.get('session') as Record<string, any>).get('challenge'));
+		const { options, user } = JSON.parse((c.get('session')).get('challenge'));
 
 		// Find the matching passkey for this authentication attempt
 		// Each user can have multiple passkeys (from different devices)
@@ -219,12 +219,12 @@ authRoutes.post('/login/complete', async (c) => {
 			await env.users.put(user.username, JSON.stringify(user));
 
 			// *** Mark session as authenticated ***
-			(c.get('session') as Record<string, any>).set('currentUser', user.username);
+			(c.get('session')).set('currentUser', user.username);
 		}
 
 		// Clear the challenge from the session for security
 		// This prevents the same challenge from being reused
-		(c.get('session') as Record<string, any>).set('challenge', null);
+		(c.get('session')).set('challenge', null);
 
 		return c.json({ verified });
 	} catch (err) {
@@ -239,8 +239,8 @@ authRoutes.post('/login/complete', async (c) => {
  */
 authRoutes.post('/logout', async (c) => {
 	try {
-		(c.get('session') as Record<string, any>).set('challenge', null);
-		(c.get('session') as Record<string, any>).set('currentUser', null);
+		(c.get('session')).set('challenge', null);
+		(c.get('session')).set('currentUser', null);
 
 		return c.json({ message: 'Logged out successfully' });
 	} catch (err) {
