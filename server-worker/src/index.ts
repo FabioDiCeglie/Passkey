@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { CookieStore, Session, sessionMiddleware } from 'hono-sessions';
+import { createMiddleware } from 'hono/factory'
 import { cors } from 'hono/cors';
 import authRoutes from './routes/auth';
 
@@ -13,6 +14,24 @@ export type HonoEnv = {
 const app = new Hono<HonoEnv>();
 const store = new CookieStore();
 
+
+export const cookieSessionMiddleware = createMiddleware(async (c, next) => {
+	const store = new CookieStore()
+
+	const m = sessionMiddleware({
+		store,
+		encryptionKey: c.env.SESSION_ENCRYPTION_KEY || "your-secure-random-string-here",
+		expireAfterSeconds: 604800,
+		cookieOptions: {
+			sameSite: 'Lax',
+			path: '/',
+			httpOnly: true,
+		},
+	})
+
+	return m(c, next)
+})
+
 app.use(cors({
 	origin: ['http://localhost:5173'],
 	allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -20,19 +39,9 @@ app.use(cors({
 	credentials: true,
 }));
 
-app.use(
-	'*',
-	sessionMiddleware({
-		store,
-		encryptionKey: 'encryption_key_at_least_32_characters_long',
-		expireAfterSeconds: 86400,
-		cookieOptions: {
-			sameSite: 'Lax',
-			path: '/',
-			httpOnly: true,
-		},
-	})
-);
+app
+	.use('*')
+	.use(cookieSessionMiddleware)
 
 app.get('/healthcheck', (c) => c.json(204));
 
