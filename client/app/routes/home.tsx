@@ -57,26 +57,5 @@ export default function Home() {
         </div>
       </div>
     );
-  } else {
-    return (
-      <div className='flex min-h-screen items-center justify-center'>
-        <div className='bg-white rounded-lg shadow-xl p-10 text-center'>
-          <h1 className='text-4xl font-extrabold text-gray-800 mb-4 flex items-center justify-center'>
-            You need to login<span className='ml-2'>🔐</span>
-          </h1>
-          <p className='text-lg text-gray-600'>
-            Welcome to the Passkey project! Enjoy your secure access.
-          </p>
-          <div className='mt-6'>
-            <button
-              className='bg-red-500 text-white px-6 py-3 rounded-full shadow-md hover:bg-red-400 transition duration-300 ease-in-out cursor-pointer'
-              onClick={() => navigate('/login')}
-            >
-              <span className='mr-2'>🔓</span> Login
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  } 
 }
