@@ -32,7 +32,7 @@ export const cookieSessionMiddleware = createMiddleware(async (c, next) => {
 })
 
 app.use(cors({
-	origin: ['http://localhost:5173'],
+	origin: ['http://localhost:5173', 'https://passkey-project.vercel.app'],
 	allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 	allowHeaders: ['Content-Type', 'Authorization'],
 	credentials: true,
