@@ -28,7 +28,7 @@ export default function Login() {
         isLoading: true,
       }));
       const challenge = await login(event);
-      const signedChallenge = await startAuthentication(challenge).catch(
+      const signedChallenge = await startAuthentication({optionsJSON: challenge}).catch(
         (err) => {
           console.error(err);
           throw err;

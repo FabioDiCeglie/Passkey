@@ -30,7 +30,7 @@ export default function SignUp() {
         isLoading: true,
       }));
       const challenge = await register(event);
-      const signedChallenge = await startRegistration(challenge).catch(
+      const signedChallenge = await startRegistration({optionsJSON: challenge}).catch(
         (err) => {
           console.error(err);
           throw err;
