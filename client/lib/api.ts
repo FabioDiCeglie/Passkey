@@ -10,7 +10,7 @@ export const register = async (event: React.FormEvent<HTMLFormElement>): Promise
   );
 };
 
-export const verifyRegistration = async (signedChallenge: RegistrationResponseJSON): Promise<{ verified: boolean }> => {
+export const verifyRegistration = async (signedChallenge: RegistrationResponseJSON): Promise<{ verified: boolean, username: string }> => {
   return fetchWithErrorHandling(
     `${import.meta.env.VITE_API_URL}/api/register/complete`,
     { method: 'POST', body: JSON.stringify(signedChallenge), credentials: 'include' },
@@ -27,7 +27,7 @@ export const login = async (event: React.FormEvent<HTMLFormElement>): Promise<Pu
   );
 };
 
-export const verifyLogin = async (signedChallenge: AuthenticationResponseJSON): Promise<{ verified: boolean }> => {
+export const verifyLogin = async (signedChallenge: AuthenticationResponseJSON): Promise<{ verified: boolean, username: string }> => {
   return fetchWithErrorHandling(
     `${import.meta.env.VITE_API_URL}/api/login/complete`,
     { method: 'POST', body: JSON.stringify(signedChallenge), credentials: 'include' },

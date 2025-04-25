@@ -119,7 +119,7 @@ authRoutes.post('/register/complete', async (c) => {
 			(c.get('session')).set('challenge', null);
 			// *** Mark session as authenticated ***
 			(c.get('session')).set('currentUser', user.username);
-			return c.json({ verified });
+			return c.json({ verified, username: user.username });
 		}
 	} catch (err) {
 		console.error(err);
@@ -226,7 +226,7 @@ authRoutes.post('/login/complete', async (c) => {
 		// This prevents the same challenge from being reused
 		(c.get('session')).set('challenge', null);
 
-		return c.json({ verified });
+		return c.json({ verified, username: user.username });
 	} catch (err) {
 		console.error(err);
 		return c.json({ error: `Error verifying login response: ${err}` }, 500);

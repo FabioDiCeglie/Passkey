@@ -34,7 +34,7 @@ export default function SignUp() {
         }
       );
 
-      const verification: { verified: boolean } = await verifyRegistration(
+      const verification = await verifyRegistration(
         signedChallenge
       );
 
@@ -44,6 +44,7 @@ export default function SignUp() {
           error: '',
           isLoading: false,
           loggedIn: true,
+          username: verification.username,
         }));
         navigate('/');
       }

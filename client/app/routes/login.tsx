@@ -31,7 +31,7 @@ export default function Login() {
         }
       );
 
-      const verification: { verified: boolean } = await verifyLogin(
+      const verification = await verifyLogin(
         signedChallenge
       );
 
@@ -41,6 +41,7 @@ export default function Login() {
           error: '',
           isLoading: false,
           loggedIn: true,
+          username: verification.username,
         }));
         navigate('/');
       }
