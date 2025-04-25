@@ -5,11 +5,8 @@ type FormComponentProps = {
   linkHref: string;
   linkPrompt: string;
   handleSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
-  isAuthorized: {
-    error: string;
-    isLoading: boolean;
-    verified: boolean;
-  };
+  error: string | null;
+  isLoading: boolean;
 };
 
 const FormComponent: React.FC<FormComponentProps> = ({
@@ -19,7 +16,8 @@ const FormComponent: React.FC<FormComponentProps> = ({
   linkHref,
   linkPrompt,
   handleSubmit,
-  isAuthorized,
+  error,
+  isLoading,
 }) => (
   <div className='flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8'>
     <div className='sm:mx-auto sm:w-full sm:max-w-sm'>
@@ -49,13 +47,13 @@ const FormComponent: React.FC<FormComponentProps> = ({
           </div>
         </div>
 
-        {isAuthorized.error !== '' && (
+        {error !== '' && (
           <div className='flexjustify-center'>
-            <p className='text-sm text-red-500'>{isAuthorized.error}</p>
+            <p className='text-sm text-red-500'>{error}</p>
           </div>
         )}
 
-        {isAuthorized.isLoading ? (
+        {isLoading ? (
           <button
             disabled
             type='button'

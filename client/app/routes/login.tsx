@@ -1,11 +1,11 @@
 import { startAuthentication } from '@simplewebauthn/browser';
-import { useState } from 'react';
+import type { AuthState } from 'lib/authProvider';
+import { AuthContext } from 'lib/authProvider';
+import { use } from 'react';
+import { useNavigate } from 'react-router';
 import { login, verifyLogin } from '../../lib/api';
 import FormComponent from '../components/FormComponent';
-import type { Route } from './+types/home';
-import { useNavigate } from 'react-router';
-
-export function meta({}: Route.MetaArgs) {
+export function meta() {
   return [
     { title: 'Passkey project - Log in' },
     { name: 'description', content: 'Log in to Passkey project' },
@@ -14,16 +14,12 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Login() {
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState({
-    error: '',
-    isLoading: false,
-    verified: false,
-  });
+  const { error, isLoading, setAuthState } = use(AuthContext);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
-      setIsLoggedIn((prev) => ({
+      setAuthState((prev: AuthState) => ({
         ...prev,
         isLoading: true,
       }));
@@ -40,20 +36,22 @@ export default function Login() {
       );
 
       if (verification.verified) {
-        setIsLoggedIn({
+        setAuthState((prev: AuthState) => ({
+          ...prev,
           error: '',
           isLoading: false,
-          verified: true,
-        });
+          loggedIn: true,
+        }));
         navigate('/');
       }
     } catch (err) {
       console.error(err);
-      setIsLoggedIn({
+      setAuthState((prev: AuthState) => ({
+        ...prev,
         error: err as string,
         isLoading: false,
-        verified: false,
-      });
+        loggedIn: false,
+      }));
     }
   };
 
@@ -65,7 +63,8 @@ export default function Login() {
       linkHref='/signup'
       linkPrompt="Don't have an account yet?"
       handleSubmit={handleSubmit}
-      isAuthorized={isLoggedIn}
+      error={error}
+      isLoading={isLoading}
     />
   );
 }

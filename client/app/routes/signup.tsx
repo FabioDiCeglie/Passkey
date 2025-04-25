@@ -1,13 +1,14 @@
 import {
   startRegistration
 } from '@simplewebauthn/browser';
-import { useState } from 'react';
+import type { AuthState } from 'lib/authProvider';
+import { AuthContext } from 'lib/authProvider';
+import { use } from 'react';
+import { useNavigate } from 'react-router';
 import { register, verifyRegistration } from '../../lib/api';
 import FormComponent from '../components/FormComponent';
-import type { Route } from './+types/home';
-import { useNavigate } from 'react-router';
 
-export function meta({}: Route.MetaArgs) {
+export function meta() {
   return [
     { title: 'Passkey project - Sign up' },
     { name: 'description', content: 'Sign up for Passkey project' },
@@ -16,16 +17,12 @@ export function meta({}: Route.MetaArgs) {
 
 export default function SignUp() {
   const navigate = useNavigate();
-  const [isSignedUp, setIsSignedUp] = useState({
-    error: '',
-    isLoading: false,
-    verified: false,
-  });
+  const { error, isLoading, setAuthState } = use(AuthContext);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
-      setIsSignedUp((prev) => ({
+      setAuthState((prev: AuthState) => ({
         ...prev,
         isLoading: true,
       }));
@@ -42,20 +39,22 @@ export default function SignUp() {
       );
 
       if (verification.verified) {
-        setIsSignedUp({
+        setAuthState((prev: AuthState) => ({
+          ...prev,
           error: '',
           isLoading: false,
-          verified: true,
-        });
+          loggedIn: true,
+        }));
         navigate('/');
       }
     } catch (err) {
       console.error(err);
-      setIsSignedUp({
+      setAuthState((prev: AuthState) => ({
+        ...prev,
         error: err as string,
         isLoading: false,
-        verified: false,
-      });
+        loggedIn: false,
+      }));
     }
   };
 
@@ -67,7 +66,8 @@ export default function SignUp() {
       linkHref='/login'
       linkPrompt='Already have an account?'
       handleSubmit={handleSubmit}
-      isAuthorized={isSignedUp}
+      error={error}
+      isLoading={isLoading}
     />
   );
 }

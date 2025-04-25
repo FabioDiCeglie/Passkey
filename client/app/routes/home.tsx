@@ -1,10 +1,9 @@
-import { use, useEffect, useState } from 'react';
-import type { Route } from './+types/home';
+import { use } from 'react';
 import { logout } from '../../lib/api';
 import { AuthContext } from '../../lib/authProvider';
 import { useNavigate } from 'react-router';
 
-export function meta({}: Route.MetaArgs) {
+export function meta() {
   return [
     { title: 'Passkey project' },
     { name: 'description', content: 'Welcome to Passkey project' },
@@ -26,14 +25,6 @@ export default function Home() {
         console.error(error);
       });
   };
-
-  useEffect(() => {
-    if (!loggedIn) {
-      navigate('/login');
-    } else {
-      navigate('/');
-    }
-  }, [loggedIn]);
 
   if (loggedIn) {
     return (
