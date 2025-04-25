@@ -32,44 +32,59 @@ This project demonstrates a basic implementation of passwordless authentication 
 
 1.  **Clone the repository:**
     ```bash
-    git clone <your-repository-url>
-    cd <your-repository-name>
+    git clone git@github.com:FabioDiCeglie/Passkey.git
     ```
 
 2.  **Install Client Dependencies:**
     ```bash
     cd client
-    npm install
-    cd ..
+    pnpm install
     ```
 
 3.  **Install Server Dependencies:**
     ```bash
     cd server-worker
-    npm install
-    cd ..
+    pnpm install
     ```
 
 ### Configuration
 
 1.  **Cloudflare KV Namespace:**
     *   Create a KV namespace in your Cloudflare dashboard.
-    *   Add the namespace binding to your `server-worker/wrangler.toml` file:
-        ```toml
-        # wrangler.toml
-        name = "your-worker-name"
-        main = "src/index.ts"
-        compatibility_date = "YYYY-MM-DD" # Use a recent date
-
-        kv_namespaces = [
-          { binding = "users", id = "YOUR_KV_NAMESPACE_ID", preview_id = "YOUR_KV_PREVIEW_NAMESPACE_ID" }
-        ]
-
-        [vars]
-        SESSION_SECRET = "your-secure-random-session-secret" # Change this!
+    *   Add the namespace binding to your `server-worker/wrangler.jsonc` file:
+        ```json
+        {
+          "kv_namespaces": [
+            {
+              "binding": "users",
+              "id": "YOUR_KV_NAMESPACE_ID"
+            }
+          ]
+        }
         ```
-    *   Replace `YOUR_KV_NAMESPACE_ID` and `YOUR_KV_PREVIEW_NAMESPACE_ID` with your actual KV namespace IDs.
-    *   Set a strong `SESSION_SECRET` in the `[vars]` section.
+    *   Replace `YOUR_KV_NAMESPACE_ID` with your actual KV namespace ID. You can find this ID in your Cloudflare dashboard after creating the namespace.
+
+2.  **Session Secret:**
+    *   Set a strong, randomly generated secret for session encryption in the `vars` section of your `server-worker/wrangler.jsonc` file. **It's crucial to replace the default value with your own secure secret.**
+        ```json
+        {
+          "vars": {
+            "SESSION_ENCRYPTION_KEY": "your-secure-random-32-byte-hex-string" // <-- CHANGE THIS! e.g., generate with `openssl rand -hex 32`
+          }
+        }
+        ```
+    *   Make sure to replace `"your-secure-random-32-byte-hex-string"` with a secure, randomly generated string (a 32-byte hex string is a common practice for encryption keys).
+
+3.  **Client API Endpoint:**
+    *   The client application needs to know the URL of your backend worker.
+    *   Navigate to the `client` directory.
+    *   Copy the example environment file:
+        ```bash
+        cp .env.example .env
+        ```
+    *   Edit the `.env` file and set the `VITE_API_URL` variable to the URL where your server worker is running.
+        *   For local development using `wrangler dev`, this is typically `http://localhost:8787`.
+        *   For a deployed worker, use its Cloudflare URL (e.g., `https://your-worker-name.your-subdomain.workers.dev`).
 
 ### Running the Project
 
