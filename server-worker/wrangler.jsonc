@@ -33,7 +33,7 @@
 	 * Environment Variables
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
 	 */
-	"vars": { "SESSION_ENCRYPTION_KEY": "8f2a1b9c7d3e5f4g6h8i0j2k4l6m8n0p2q" },
+	// "vars": {},
 	/**
 	 * Note: Use secrets to store sensitive data.
 	 * https://developers.cloudflare.com/workers/configuration/secrets/
