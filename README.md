@@ -64,16 +64,22 @@ This project demonstrates a basic implementation of passwordless authentication 
         ```
     *   Replace `YOUR_KV_NAMESPACE_ID` with your actual KV namespace ID. You can find this ID in your Cloudflare dashboard after creating the namespace.
 
-2.  **Session Secret:**
-    *   Set a strong, randomly generated secret for session encryption in the `vars` section of your `server-worker/wrangler.jsonc` file. **It's crucial to replace the default value with your own secure secret.**
-        ```json
-        {
-          "vars": {
-            "SESSION_ENCRYPTION_KEY": "your-secure-random-32-byte-hex-string" // <-- CHANGE THIS! e.g., generate with `openssl rand -hex 32`
-          }
-        }
+2.  **Session Secret (`SESSION_ENCRYPTION_KEY`):**
+    *   This Worker uses an encrypted session cookie. You need to provide a secret encryption key. **Do not commit this key directly to `wrangler.jsonc`.
         ```
-    *   Make sure to replace `"your-secure-random-32-byte-hex-string"` with a secure, randomly generated string (a 32-byte hex string is a common practice for encryption keys).
+    *   **Local Development:** Create a file named `.dev.vars` in the `server-worker/` directory (add this file to your `.gitignore`!) and define the secret there:
+        ```ini
+        # server-worker/.dev.vars
+        SESSION_ENCRYPTION_KEY="your-secure-random-32-byte-hex-string" # <-- CHANGE THIS! e.g., generate with `openssl rand -hex 32`
+        ```
+        Replace `"your-secure-random-32-byte-hex-string"` with a secure, randomly generated 32-byte hex string. This file is used automatically when you run `wrangler dev`.
+    *   **Deployment:** Before deploying, you must set this secret in your Cloudflare environment using the following method:
+        *   **Wrangler CLI:** Run the following command in your terminal within the `server-worker` directory, replacing `<your-secret-key>` with your actual key:
+            ```bash
+            npx wrangler secret put SESSION_ENCRYPTION_KEY
+            # It will prompt you to enter the secret value securely.
+            ```
+            Refer to the [Cloudflare Secrets documentation](https://developers.cloudflare.com/workers/configuration/secrets/) for more details.
 
 3.  **Client API Endpoint:**
     *   The client application needs to know the URL of your backend worker.
