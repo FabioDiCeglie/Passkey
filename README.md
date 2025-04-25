@@ -1,4 +1,4 @@
-# Passkey Project Demo
+# Tired of Passwords? Check Out My Passkey (WebAuthn) Demo! 🚀
 
 This project demonstrates a basic implementation of passwordless authentication using Passkeys (WebAuthn) with a React frontend and a Hono backend running on Cloudflare Workers.
 
