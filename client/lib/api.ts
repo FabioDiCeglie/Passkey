@@ -5,7 +5,12 @@ export const register = async (event: React.FormEvent<HTMLFormElement>): Promise
   const username = new FormData(event.target as HTMLFormElement).get('username');
   return fetchWithErrorHandling(
     `${import.meta.env.VITE_API_URL}/api/register`,
-    { method: 'POST', body: JSON.stringify({ username }), credentials: 'include'  },
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username }),
+      credentials: 'include'
+    },
     "Error during registration"
   );
 };
@@ -13,7 +18,12 @@ export const register = async (event: React.FormEvent<HTMLFormElement>): Promise
 export const verifyRegistration = async (signedChallenge: RegistrationResponseJSON): Promise<{ verified: boolean, username: string }> => {
   return fetchWithErrorHandling(
     `${import.meta.env.VITE_API_URL}/api/register/complete`,
-    { method: 'POST', body: JSON.stringify(signedChallenge), credentials: 'include' },
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(signedChallenge),
+      credentials: 'include'
+    },
     "Error during registration verification"
   );
 };
@@ -22,7 +32,12 @@ export const login = async (event: React.FormEvent<HTMLFormElement>): Promise<Pu
   const username = new FormData(event.target as HTMLFormElement).get('username');
   return fetchWithErrorHandling(
     `${import.meta.env.VITE_API_URL}/api/login`,
-    { method: 'POST', body: JSON.stringify({ username }), credentials: 'include'  },
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username }),
+      credentials: 'include'
+    },
     "Error during registration"
   );
 };
@@ -30,7 +45,12 @@ export const login = async (event: React.FormEvent<HTMLFormElement>): Promise<Pu
 export const verifyLogin = async (signedChallenge: AuthenticationResponseJSON): Promise<{ verified: boolean, username: string }> => {
   return fetchWithErrorHandling(
     `${import.meta.env.VITE_API_URL}/api/login/complete`,
-    { method: 'POST', body: JSON.stringify(signedChallenge), credentials: 'include' },
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(signedChallenge),
+      credentials: 'include'
+    },
     "Error during login verification"
   );
 };
@@ -38,7 +58,11 @@ export const verifyLogin = async (signedChallenge: AuthenticationResponseJSON): 
 export const logout = async (): Promise<{ message: string }> => {
   return fetchWithErrorHandling(
     `${import.meta.env.VITE_API_URL}/api/logout`,
-    { method: 'POST', credentials: 'include' },
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    },
     "Error during logout"
   );
 };
@@ -46,7 +70,11 @@ export const logout = async (): Promise<{ message: string }> => {
 export const checkSession = async (): Promise<{ loggedIn: boolean; username?: string }> => {
 	return fetchWithErrorHandling(
 		`${import.meta.env.VITE_API_URL}/api/auth`,
-		{ method: 'GET', credentials: 'include' },
+		{ 
+      method: 'GET',  
+      headers: { 'Content-Type': 'application/json' }, 
+      credentials: 'include' 
+    },
 		"Error checking session status"
 	);
 };
