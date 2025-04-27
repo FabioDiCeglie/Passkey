@@ -22,6 +22,7 @@ export const cookieSessionMiddleware = createMiddleware(async (c, next) => {
 		expireAfterSeconds: 604800,
 		cookieOptions: {
 			sameSite: 'None',
+			partitioned: true,
 			path: '/',
 			httpOnly: true,
 			secure: true,
