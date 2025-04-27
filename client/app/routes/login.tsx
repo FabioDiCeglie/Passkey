@@ -47,9 +47,10 @@ export default function Login() {
       }
     } catch (err) {
       console.error(err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
       setAuthState((prev: AuthState) => ({
         ...prev,
-        error: err as string,
+        error: errorMessage,
         isLoading: false,
         loggedIn: false,
       }));
